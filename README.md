@@ -1,4 +1,7 @@
 # crawler4j
+[![Build Status](https://travis-ci.org/yasserg/crawler4j.svg?branch=master)](https://travis-ci.org/yasserg/crawler4j)
+![Maven Central](https://img.shields.io/maven-central/v/edu.uci.ics/crawler4j.svg?style=flat-square)
+
 crawler4j is an open source web crawler for Java which provides a simple interface for
 crawling the Web. Using it, you can setup a multi-threaded web crawler in few minutes.
 
@@ -12,7 +15,7 @@ To use the latest release of crawler4j, please use the following snippet in your
     <dependency>
         <groupId>edu.uci.ics</groupId>
         <artifactId>crawler4j</artifactId>
-        <version>4.1</version>
+        <version>4.2</version>
     </dependency>
 ```
 
@@ -32,7 +35,7 @@ implementation:
 ```java
 public class MyCrawler extends WebCrawler {
 
-    private final static Pattern FILTERS = Pattern.compile(".*(\\.(css|js|gif|jpe?g"
+    private final static Pattern FILTERS = Pattern.compile(".*(\\.(css|js|gif|jpg"
                                                            + "|png|mp3|mp3|zip|gz))$");
 
     /**
@@ -65,7 +68,7 @@ public class MyCrawler extends WebCrawler {
              HtmlParseData htmlParseData = (HtmlParseData) page.getParseData();
              String text = htmlParseData.getText();
              String html = htmlParseData.getHtml();
-             List<WebURL> links = htmlParseData.getOutgoingUrls();
+             Set<WebURL> links = htmlParseData.getOutgoingUrls();
 
              System.out.println("Text length: " + text.length());
              System.out.println("Html length: " + html.length());
@@ -172,7 +175,7 @@ crawlConfig.setProxyPort(8080);
 If your proxy also needs authentication:
 ```java
 crawlConfig.setProxyUsername(username);
-crawlConfig.getProxyPassword(password);
+crawlConfig.setProxyPassword(password);
 ```
 
 ### Resumable Crawling
@@ -190,9 +193,15 @@ User-agent string is used for representing your crawler to web servers. See [her
 for more details. By default crawler4j uses the following user agent string:
 
 ```
-"crawler4j (http://code.google.com/p/crawler4j/)"
+"crawler4j (https://github.com/yasserg/crawler4j/)"
 ```
 However, you can overwrite it:
 ```java
 crawlConfig.setUserAgentString(userAgentString);
 ```
+
+## License
+
+Copyright (c) 2010-2016 Yasser Ganjisaffar
+
+Published under [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0), see LICENSE

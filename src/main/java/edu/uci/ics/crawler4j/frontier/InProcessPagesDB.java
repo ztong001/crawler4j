@@ -17,13 +17,11 @@
 
 package edu.uci.ics.crawler4j.frontier;
 
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sleepycat.je.Cursor;
 import com.sleepycat.je.DatabaseEntry;
-import com.sleepycat.je.DatabaseException;
 import com.sleepycat.je.Environment;
 import com.sleepycat.je.OperationStatus;
 import com.sleepycat.je.Transaction;
@@ -38,52 +36,37 @@ import edu.uci.ics.crawler4j.url.WebURL;
  * @author Yasser Ganjisaffar
  */
 public class InProcessPagesDB extends WorkQueues {
+    private static final Logger logger = LoggerFactory.getLogger(InProcessPagesDB.class);
 
-  private static final Logger logger = LoggerFactory.getLogger(InProcessPagesDB.class);
+    private static final String DATABASE_NAME = "InProcessPagesDB";
 
-  public InProcessPagesDB(Environment env) {
-    super(env, "InProcessPagesDB", true);
-    long docCount = getLength();
-    if (docCount > 0) {
-      logger.info("Loaded {} URLs that have been in process in the previous crawl.", docCount);
-    }
-  }
-
-  public boolean removeURL(WebURL webUrl) {
-    synchronized (mutex) {
-      try {
-        DatabaseEntry key = getDatabaseEntryKey(webUrl);
-        Cursor cursor = null;
-        DatabaseEntry value = new DatabaseEntry();
-        Transaction txn = env.beginTransaction(null, null);
-        try {
-          cursor = urlsDB.openCursor(txn, null);
-          OperationStatus result = cursor.getSearchKey(key, value, null);
-
-          if (result == OperationStatus.SUCCESS) {
-            result = cursor.delete();
-            if (result == OperationStatus.SUCCESS) {
-              return true;
-            }
-          }
-        } catch (DatabaseException e) {
-          if (txn != null) {
-            txn.abort();
-            txn = null;
-          }
-          throw e;
-        } finally {
-          if (cursor != null) {
-            cursor.close();
-          }
-          if (txn != null) {
-            txn.commit();
-          }
+    public InProcessPagesDB(Environment env) {
+        super(env, DATABASE_NAME, true);
+        long docCount = getLength();
+        if (docCount > 0) {
+            logger.info("Loaded {} URLs that have been in process in the previous crawl.",
+                        docCount);
         }
-      } catch (Exception e) {
-        logger.error("Error while manipulating the DB of links from previous crawls", e);
-      }
     }
-    return false;
-  }
+
+    public boolean removeURL(WebURL webUrl) {
+        synchronized (mutex) {
+            DatabaseEntry key = getDatabaseEntryKey(webUrl);
+            DatabaseEntry value = new DatabaseEntry();
+            Transaction txn = beginTransaction();
+            try (Cursor cursor = openCursor(txn)) {
+                OperationStatus result = cursor.getSearchKey(key, value, null);
+
+                if (result == OperationStatus.SUCCESS) {
+                    result = cursor.delete();
+                    if (result == OperationStatus.SUCCESS) {
+                        return true;
+                    }
+                }
+            } finally {
+                commit(txn);
+            }
+        }
+        return false;
+    }
 }
